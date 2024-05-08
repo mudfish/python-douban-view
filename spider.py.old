@@ -42,18 +42,6 @@ class spider(object):
                         "url",
                     ]
                 )
-        # try:
-        #     conn = connect(
-        #         host="localhost",
-        #         user="root",
-        #         password="123456",
-        #         database="db_douban",
-        #         port=3306,
-        #         charset="utf8mb4",
-        #     )
-
-        # except:
-        #     print("An exception occurred")
 
     def save_to_csv(self, row):
         with open("movie_data.csv", "a", newline="", encoding="utf-8") as f:
