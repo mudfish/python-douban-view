@@ -1,3 +1,5 @@
+import re
+import traceback
 import requests
 import csv
 import os
@@ -12,18 +14,24 @@ import asyncio
 from aiohttp import ClientSession
 from tqdm import tqdm
 import time
+import random
+
+"""
+异步并发爬虫
+"""
 
 # 本次运行获取的最大页数
-MAX_PAGES = 3
+MAX_PAGES = 2
 # 进度控制文件
 PAGE_PROGRESS_FILE = "page_progress.json"
 # 电影类型
-MOVIE_TYPES = ["剧情", "喜剧", "动作", "爱情"]
+MOVIE_TYPES = ["剧情", "喜剧", "动作", "爱情", "科幻", "动画", "纪录片"]
 # CSV文件名
 CSV_NAME = "movie_data.csv"
 # CSV头
 CSV_HEADS = [
     "id",
+    "movie_id",
     "title",
     "year",
     "directors",
@@ -38,8 +46,14 @@ CSV_HEADS = [
     "time",
     "url",
 ]
+# 上映日期匹配正则，剔除非数字和-
+RELEASE_DATE_REMOVE_RE = r"[^0-9-]"
 
 engine = create_engine("mysql+pymysql://root:123456@127.0.0.1:3306/db_douban")
+
+
+def get_id():
+    return str(random.randint(1, 100000000)) + str(time.time()).split(".")[1].strip()
 
 
 class Spider:
@@ -68,7 +82,14 @@ class Spider:
     def load_page_progress(self):
         if os.path.exists(PAGE_PROGRESS_FILE):
             with open(PAGE_PROGRESS_FILE, "r", encoding="utf-8") as f:
-                self.page_progress = json.load(f)
+                # 判断文件内容是否为空
+                if os.stat(PAGE_PROGRESS_FILE).st_size == 0:
+                    # 初始化页面进度
+                    print("初始化页面进度")
+                    self.page_progress = {}
+                    self.save_page_progress()
+                else:
+                    self.page_progress = json.load(f)
 
     def save_page_progress(self):
         with open(PAGE_PROGRESS_FILE, "w", encoding="utf-8") as f:
@@ -99,10 +120,12 @@ class Spider:
                         self.update_global_progress()
                 except Exception as e:
                     print(f"处理:{type_name}第{page}页失败: {e}")
-                    break
+                    traceback.print_exc()
+                    continue
 
     async def process_movie(self, session, movie):
         movie_data = []
+        movie_data.append(get_id())
         movie_data.append(movie["id"])
         movie_data.append(movie["title"])
         movie_data.append(movie["year"])
@@ -124,7 +147,7 @@ class Spider:
         movie_data.append(
             path.xpath(
                 '//span[contains(text(),"制片国家")]/following-sibling::br[1]/preceding-sibling::text()[1]'
-            )[0]
+            )[0].replace(" / ", ",")
         )
         # 摘要
         movie_data.append(path.xpath('//span[@property="v:summary"]/text()')[0].strip())
@@ -140,10 +163,19 @@ class Spider:
         )
         # 上映日期
         movie_data.append(
-            path.xpath('//span[@property="v:initialReleaseDate"]/text()')[0][:10]
+            re.sub(
+                RELEASE_DATE_REMOVE_RE,
+                "",
+                path.xpath('//span[@property="v:initialReleaseDate"]/text()')[0][:10],
+            )
         )
-        # 时长
-        movie_data.append(path.xpath('//span[@property="v:runtime"]/text()')[0])
+        # 时长（空处理）
+        # print(movie["id"])
+        movie_time = path.xpath('//span[@property="v:runtime"]/text()')
+        if len(movie_time) > 0:
+            movie_data.append(movie_time[0])
+        else:
+            movie_data.append("")
         # url
         movie_data.append(self.movie_detail_url.format(movie["id"]))
         self.save_to_csv(movie_data)
@@ -156,13 +188,13 @@ class Spider:
     def clean_csv(self):
         print("===========清理数据============")
         df = pd.read_csv(CSV_NAME, encoding="utf-8")
-        df.drop_duplicates(subset=["id"], keep="first", inplace=True)
+        df.drop_duplicates(subset=["movie_id"], keep="first", inplace=True)
         print("存储到数据库...")
         df.to_sql("tb_movie", con=engine, index=False, if_exists="append")
         print("清理重复数据...")
         engine.connect().execute(
             text(
-                "delete from tb_movie where id in (select id from (select id from tb_movie group by id having count(*) > 1) as t)"
+                "delete t1 from tb_movie t1 inner join (select min(id) as id,movie_id from tb_movie group by movie_id having count(*) > 1) t2 on t1.movie_id=t2.movie_id where t1.id>t2.id"
             )
         )
 
@@ -179,7 +211,7 @@ class Spider:
         for type_name in MOVIE_TYPES:
             if MAX_PAGES > self.page_progress.get(type_name, 1):
                 self.total_pages += MAX_PAGES + 1 - self.page_progress.get(type_name, 1)
-        # print(self.total_pages)
+        print(self.total_pages)
         if self.total_pages > 0:
             self.global_progress_bar = tqdm(
                 total=self.total_pages, desc="progress", unit="page", colour="GREEN"

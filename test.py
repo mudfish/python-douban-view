@@ -1,9 +1,15 @@
 from tqdm import tqdm
 import time
+import random
 
-global_progress_bar = tqdm(total=7, desc="progress", unit="page", colour='GREEN')
+"""
+测试文件
+"""
 
-for i in range(8):
-    time.sleep(0.1)
-    global_progress_bar.update(round(1/7,2))
-global_progress_bar.close()
+print(time.time())
+
+id = str(time.time())
+print(id)
+
+
+print(str(random.randint(1, 100000000)) + str(time.time()).split(".")[1].strip())
