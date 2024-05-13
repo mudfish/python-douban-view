@@ -106,6 +106,15 @@ def register():
         return render_template("register.html")
 
 
+@app.route("/list")
+def movie_list():
+    # 查询数据库获取电影列表
+    movies = db_query.fetch_movie_list()  # 假设此函数返回一个包含电影信息的列表
+
+    # 渲染并返回list.html，同时传递movies数据
+    return render_template("list.html", movies=movies)
+
+
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template("404.html"), 404

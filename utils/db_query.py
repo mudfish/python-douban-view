@@ -114,3 +114,14 @@ def fetch_movie_rating_distribution():
     echarts_data = list(sorted_ratings.items())
 
     return echarts_data
+
+
+# 获取电影列表
+def fetch_movie_list():
+    # 使用pandas从数据库加载数据
+    df = pd.read_sql_query("SELECT * FROM tb_movie", db_config.get_connection())
+
+    # 转换为字典列表，方便在模板中使用
+    movie_list = df.to_dict(orient="records")
+
+    return movie_list
