@@ -5,13 +5,6 @@ from utils import db_query
 app = Flask(__name__)
 app.secret_key = "mysessionkey"
 
-
-# 保持数据库连接
-# def getconnection():
-#     connection.ping(reconnect=True)
-#     return connection
-
-
 # 统一请求拦截
 @app.before_request
 def before_request():
