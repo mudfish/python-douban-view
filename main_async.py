@@ -21,11 +21,11 @@ import random
 """
 
 # 本次运行获取的最大页数
-MAX_PAGES = 2
+MAX_PAGES = 5
 # 进度控制文件
 PAGE_PROGRESS_FILE = "page_progress.json"
 # 电影类型
-MOVIE_TYPES = ["剧情", "喜剧", "动作", "爱情", "科幻", "动画", "纪录片"]
+MOVIE_TYPES = ["剧情", "喜剧", "动作", "爱情", "科幻", "动画"]
 # CSV文件名
 CSV_NAME = "movie_data.csv"
 # CSV头
