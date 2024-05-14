@@ -5,7 +5,6 @@ import random
 """
 测试文件
 """
-
 print(time.time())
 
 id = str(time.time())
