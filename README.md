@@ -9,5 +9,6 @@
 ![alt text](doc/image-2.png)
 
 ## 捐赠说明
-- 如果本项目对你有帮助的话，可自愿捐赠，谢谢！
+- 觉得本项目对你有帮助的话，可请作者喝杯茶，谢谢！
+  
 ![alt text](doc/donate.png)
