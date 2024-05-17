@@ -1,4 +1,5 @@
 ## 部署说明
+0. 导入必要的工具包
 1. 创建mysql数据库 `db_douban`，执行doc/`db_douban.sql`
 2. 请分别修改db_query.py和main_async.py中的数据库连接信息
 3. 首次运行请删除`movie_data.csv`和`page_progress.json`两个文件
