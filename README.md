@@ -13,3 +13,7 @@
 - 觉得本项目对你有帮助的话，可请作者喝杯茶，谢谢！
   
 ![alt text](doc/donate.png)
+
+## 更多资源
+- 这是一个资源站，后续会不断更新一些好用的东西或书籍教程，值得持续关注：
+![https://www.codegen.top/](https://www.codegen.top/)
